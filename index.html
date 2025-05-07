@@ -79,12 +79,12 @@
     const token = 'patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc';
     const baseId = 'tblefXMYV3zUmEwXk';
     const tableName = 'Imported table';
-    const dependenciaTable = 'Dependencia';
+    const dependenciaTableId = 'tblhnh0UVIIbHMZFr';
 
     async function fetchAllDependencias() {
       let records = [];
       let offset = '';
-      let url = `https://api.airtable.com/v0/${baseId}/${dependenciaTable}?view=Grid%20view`;
+      let url = `https://api.airtable.com/v0/${baseId}/${dependenciaTableId}?view=Grid%20view`;
 
       do {
         const response = await fetch(url + (offset ? `&offset=${offset}` : ''), {
@@ -104,10 +104,10 @@
       try {
         const records = await fetchAllDependencias();
         records.forEach(record => {
-          if (record.fields["DEPENDENCIA"]) {
+          if (record.fields["fldP7TkiFTkfsyo9p"]) {
             const option = document.createElement('option');
             option.value = record.id;
-            option.textContent = record.fields["DEPENDENCIA"];
+            option.textContent = record.fields["fldP7TkiFTkfsyo9p"];
             select.appendChild(option);
           }
         });
