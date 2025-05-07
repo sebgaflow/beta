@@ -1,4 +1,3 @@
-
 // form.js
 const token  = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
 const baseId = "appi5iq2xznnBxNvJ";
@@ -24,53 +23,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    // 1) Recogemos y limpiamos inputs
+
+    // 1) Recogemos y limpiamos los valores
     const f        = new FormData(form);
+    const telefono = f.get("telefono").trim();
     const nombres  = f.get("nombres").trim();
     const ape1     = f.get("apellido1").trim();
     const ape2     = f.get("apellido2").trim();
-    const telefono = f.get("telefono").trim();
 
-    // 2) Construimos la fórmula OR(persona, teléfono)
-    const personaCond = `AND(
-      {${F.nombres}}='${nombres}',
-      {${F.apellido1}}='${ape1}',
-      {${F.apellido2}}='${ape2}'
-    )`;
-    const phoneCond   = `{${F.telefono}}='${telefono}'`;
-    const filter      = encodeURIComponent(`OR(${personaCond},${phoneCond})`);
-
-    // 3) Interacción con Airtable para ver si ya existe algo
-    //    Aquí es donde hacemos el fetch a la API con filterByFormula:
-    const res = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${filter}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+    // 2) VALIDACIÓN #1: TELÉFONO
+    //    Aquí hacemos la primera interacción con la base:
+    const phoneFilter = encodeURIComponent(`{${F.telefono}}='${telefono}'`);
+    const phoneRes = await fetch(
+      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${phoneFilter}`,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    const data = await res.json();
-
-    // 4) Si Airtable devuelve registros, decidimos el mensaje
-    if (data.records?.length > 0) {
-      const rec         = data.records[0].fields;
-      const dupPersona  = 
-        rec[F.nombres]   === nombres &&
-        rec[F.apellido1] === ape1   &&
-        rec[F.apellido2] === ape2;
-      const dupTelefono = rec[F.telefono] === telefono;
-
-      if (dupPersona && dupTelefono) {
-        msg.textContent = "❌ Error: esta persona y este número ya fueron registrados.";
-      } else if (dupPersona) {
-        msg.textContent = "❌ Error: esta persona ya fue registrada.";
-      } else { 
-        msg.textContent = "❌ Error: este número ya fue registrado.";
-      }
-      msg.style.color = "red";
+    const phoneJson = await phoneRes.json();
+    if (phoneJson.records?.length > 0) {
+      msg.textContent = "❌ Error: este número ya fue registrado.";
+      msg.style.color   = "red";
       return;
     }
 
-    // 5) Si no hay duplicados, enviamos el registro
+    // 3) VALIDACIÓN #2: PERSONA (nombre + apellidos)
+    //    Segunda interacción con la base:
+    const personFormula = encodeURIComponent(`
+      AND(
+        {${F.nombres}}='${nombres}',
+        {${F.apellido1}}='${ape1}',
+        {${F.apellido2}}='${ape2}'
+      )
+    `);
+    const personRes = await fetch(
+      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${personFormula}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const personJson = await personRes.json();
+    if (personJson.records?.length > 0) {
+      msg.textContent = "❌ Error: esta persona ya fue registrada.";
+      msg.style.color   = "red";
+      return;
+    }
+
+    // 4) Ningún duplicado: enviamos el registro
     const recordFields = {
       [F.dependencia]: f.get("dependencia"),
       [F.promotor]:    f.get("promotor"),
