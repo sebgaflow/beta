@@ -1,54 +1,45 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario de Registro</title>
+  <title>Formulario Airtable</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
+      background: #f5f5f5;
       padding: 20px;
     }
     .container {
       max-width: 600px;
-      background: white;
-      padding: 32px;
       margin: auto;
+      background: white;
+      padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }
-    h2 {
-      text-align: center;
-      font-weight: 600;
-      margin-bottom: 28px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     input, select {
       width: 100%;
       padding: 12px;
-      margin-bottom: 18px;
-      border: 1px solid #d0d0d0;
-      border-radius: 10px;
+      margin-bottom: 15px;
       font-size: 16px;
-      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 10px;
     }
     button {
-      width: 100%;
-      padding: 14px;
-      background-color: #8e8e93;
+      background: #8e8e93;
       color: white;
+      padding: 14px;
       border: none;
       border-radius: 12px;
       font-size: 16px;
-      font-weight: 500;
       cursor: pointer;
+      width: 100%;
     }
     #mensaje {
       margin-top: 20px;
+      font-weight: bold;
       text-align: center;
-      font-weight: 500;
     }
   </style>
 </head>
@@ -56,14 +47,14 @@
   <div class="container">
     <h2>Formulario de Registro</h2>
     <form id="formulario">
-      <select name="dependencia" id="dependencia" required>
+      <select name="dependencia" required>
         <option value="">Selecciona una dependencia</option>
+        <option value="DIF Morelos">DIF Morelos</option>
         <option value="CEAGUA">CEAGUA</option>
         <option value="COEVAL">COEVAL</option>
         <option value="Consejería Jurídica">Consejería Jurídica</option>
         <option value="Consejo de Ciencia y Tecnología">Consejo de Ciencia y Tecnología</option>
         <option value="Coordinación General de Movilidad y Transporte">Coordinación General de Movilidad y Transporte</option>
-        <option value="DIF Morelos">DIF Morelos</option>
         <option value="Dirección de Atención a Migrantes">Dirección de Atención a Migrantes</option>
         <option value="IMPAJOVEN">IMPAJOVEN</option>
         <option value="INEIEM">INEIEM</option>
@@ -88,83 +79,93 @@
         <option value="Secretaría de Seguridad y Protección Ciudadana">Secretaría de Seguridad y Protección Ciudadana</option>
         <option value="Secretaría de Turismo">Secretaría de Turismo</option>
       </select>
-      <input type="text" name="promotor" placeholder="Promotor" required>
-      <input type="text" name="nombres" placeholder="Nombre(s)" required>
-      <input type="text" name="apellido1" placeholder="Primer Apellido" required>
-      <input type="text" name="apellido2" placeholder="Segundo Apellido" required>
-      <input type="text" name="calle" placeholder="Nombre de la calle" required>
-      <input type="number" name="numext" placeholder="Número exterior" required>
-      <input type="text" name="numint" placeholder="Número interior (opcional)">
-      <input type="text" name="colonia" placeholder="Colonia" required>
-      <input type="number" name="cp" placeholder="Código postal" required>
-      <input type="number" name="seccion" placeholder="Clave de la sección" required>
-      <input type="tel" name="telefono" placeholder="Teléfono a 10 dígitos" required>
+      <input name="promotor" placeholder="Promotor" required>
+      <input name="nombres" placeholder="Nombre(s)" required>
+      <input name="apellido1" placeholder="Primer Apellido" required>
+      <input name="apellido2" placeholder="Segundo Apellido" required>
+      <input name="calle" placeholder="Calle" required>
+      <input name="numext" type="number" placeholder="Número exterior" required>
+      <input name="numint" placeholder="Número interior">
+      <input name="colonia" placeholder="Colonia" required>
+      <input name="cp" type="number" placeholder="Código postal" required>
+      <input name="seccion" type="number" placeholder="Clave de sección" required>
+      <input name="telefono" placeholder="Teléfono a 10 dígitos" required>
       <button type="submit">Enviar</button>
     </form>
     <div id="mensaje"></div>
   </div>
 
   <script>
-    const token = 'patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc';
-    const baseId = 'appi5iq2xznnBxNvJ';
-    const tableName = 'tblefXMYV3zUmEwXk';
-    const viewId = 'viwHXjTHi1mbxmX2a';
+    const token = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
+    const baseId = "appi5iq2xznnBxNvJ";
+    const tableId = "tblefXMYV3zUmEwXk";
+    const fields = {{
+      dependencia: "fldUxubMvcv8fTvUl",
+      promotor: "fldBYSsQW7AuCZIxw",
+      nombres: "fldZD3e40hfZWkBrC",
+      apellido1: "fldvTQJ9AJXZAq6Go",
+      apellido2: "fldmZn2MhygKGbp5E",
+      calle: "fldTXQpUayq03SqGP",
+      numext: "fldzcyV7OD3UHbdyx",
+      numint: "fldllGor8QzaTactq",
+      colonia: "fldnVmj53rvm5RsdQ",
+      cp: "fldU13HKpwypVx3qt",
+      seccion: "fldhRiT7s8cnZJKhN",
+      telefono: "fldPByjAjeIbIQB0t"
+    }};
 
-    document.getElementById('formulario').addEventListener('submit', async function(e) {
+    document.getElementById("formulario").addEventListener("submit", async function(e) {{
       e.preventDefault();
-      const form = new FormData(e.target);
-      const nombres = form.get('nombres').trim();
-      const apellido1 = form.get('apellido1').trim();
-      const apellido2 = form.get('apellido2').trim();
-      const telefono = form.get('telefono').trim();
+      const f = new FormData(this);
 
-      const filtro = encodeURIComponent(`OR({Teléfono a 10 dígitos_promovido} = "${telefono}", AND({Nombre(s)_promovido} = "${nombres}", {Primer Apellido  (OBLIGATORIO)_promovido} = "${apellido1}", {Segundo Apellido_promovido} = "${apellido2}"))`);
-      const url = `https://api.airtable.com/v0/${baseId}/${tableName}?view=${viewId}&filterByFormula=${filtro}`;
+      const filter = encodeURIComponent(`OR({${{fields.telefono}}} = '${{f.get("telefono")}}', AND({${{fields.nombres}}} = '${{f.get("nombres")}}', {${{fields.apellido1}}} = '${{f.get("apellido1")}}', {${{fields.apellido2}}} = '${{f.get("apellido2")}}'))`);
 
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
+      const res = await fetch(`https://api.airtable.com/v0/${{baseId}}/${{tableId}}?filterByFormula=${{filter}}`, {{
+        headers: {{ Authorization: `Bearer ${{token}}` }}
+      }});
+      const json = await res.json();
 
-      if (data.records && data.records.length > 0) {
-        document.getElementById('mensaje').innerHTML = '❌ Ya existe un registro con ese nombre completo o teléfono.';
-        document.getElementById('mensaje').style.color = 'red';
+      if (json.records && json.records.length > 0) {{
+        document.getElementById("mensaje").innerText = "❌ Ya existe un registro duplicado.";
+        document.getElementById("mensaje").style.color = "red";
         return;
-      }
+      }}
 
-      const fields = {
-        'Dependencia': form.get('dependencia'),
-        'Promotor': form.get('promotor'),
-        'Nombre(s)_promovido': nombres,
-        'Primer Apellido  (OBLIGATORIO)_promovido': apellido1,
-        'Segundo Apellido_promovido': apellido2,
-        'Nombre de la calle del domicilio_promovido': form.get('calle'),
-        'Número exterior_promovido': parseInt(form.get('numext')),
-        'Número interior_promovido': form.get('numint'),
-        'Colonia_promovido': form.get('colonia'),
-        'Código postal_promovido': parseInt(form.get('cp')),
-        'Clave de la sección  (OBLIGATORIO)_promovido': parseInt(form.get('seccion')),
-        'Teléfono a 10 dígitos_promovido': telefono
-      };
+      const record = {{
+        fields: {{
+          [fields.dependencia]: f.get("dependencia"),
+          [fields.promotor]: f.get("promotor"),
+          [fields.nombres]: f.get("nombres"),
+          [fields.apellido1]: f.get("apellido1"),
+          [fields.apellido2]: f.get("apellido2"),
+          [fields.calle]: f.get("calle"),
+          [fields.numext]: parseInt(f.get("numext")),
+          [fields.numint]: f.get("numint"),
+          [fields.colonia]: f.get("colonia"),
+          [fields.cp]: parseInt(f.get("cp")),
+          [fields.seccion]: parseInt(f.get("seccion")),
+          [fields.telefono]: f.get("telefono")
+        }}
+      }};
 
-      const createRes = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ fields })
-      });
+      const save = await fetch(`https://api.airtable.com/v0/${{baseId}}/${{tableId}}`, {{
+        method: "POST",
+        headers: {{
+          Authorization: `Bearer ${{token}}`,
+          "Content-Type": "application/json"
+        }},
+        body: JSON.stringify(record)
+      }});
 
-      if (createRes.ok) {
-        document.getElementById('mensaje').innerHTML = '✅ Registro exitoso.';
-        document.getElementById('mensaje').style.color = 'green';
-        document.getElementById('formulario').reset();
-      } else {
-        document.getElementById('mensaje').innerHTML = '❌ Error al registrar. Intenta nuevamente.';
-        document.getElementById('mensaje').style.color = 'red';
-      }
-    });
+      if (save.ok) {{
+        document.getElementById("mensaje").innerText = "✅ Registro exitoso.";
+        document.getElementById("mensaje").style.color = "green";
+        this.reset();
+      }} else {{
+        document.getElementById("mensaje").innerText = "❌ Error al enviar el formulario.";
+        document.getElementById("mensaje").style.color = "red";
+      }}
+    }});
   </script>
 </body>
 </html>
