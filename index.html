@@ -1,6 +1,4 @@
-# Solución final: escribir el bloque HTML sin usar f-strings que evalúen sintaxis JS. Guardaremos el contenido completo directamente como texto plano.
 
-html_output = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -101,12 +99,3 @@ html_output = """
 <script src="https://sebgaflow.github.io/beta/form.js"></script>
 </body>
 </html>
-"""
-
-# Guardar el archivo como .html
-final_path = "/mnt/data/formulario_airtable_final_corregido.html"
-with open(final_path, "w", encoding="utf-8") as f:
-    f.write(html_output)
-
-final_path
-
