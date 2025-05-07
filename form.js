@@ -1,4 +1,6 @@
+# Reescribimos el archivo corregido tras el reset de entorno
 
+form_js_fixed = """
 const token = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
 const baseId = "appi5iq2xznnBxNvJ";
 const tableId = "tblefXMYV3zUmEwXk";
@@ -21,10 +23,15 @@ document.getElementById("formulario").addEventListener("submit", async function 
   e.preventDefault();
   const f = new FormData(this);
 
-  const filter = encodeURIComponent(\`OR({\${fields.telefono}} = '\${f.get("telefono")}', AND({\${fields.nombres}} = '\${f.get("nombres")}', {\${fields.apellido1}} = '\${f.get("apellido1")}', {\${fields.apellido2}} = '\${f.get("apellido2")}'))\`);
+  const filter = encodeURIComponent(
+    "OR({" + fields.telefono + "} = '" + f.get("telefono") + "', AND({" +
+    fields.nombres + "} = '" + f.get("nombres") + "', {" +
+    fields.apellido1 + "} = '" + f.get("apellido1") + "', {" +
+    fields.apellido2 + "} = '" + f.get("apellido2") + "'))"
+  );
 
-  const res = await fetch(\`https://api.airtable.com/v0/\${baseId}/\${tableId}?filterByFormula=\${filter}\`, {
-    headers: { Authorization: \`Bearer \${token}\` }
+  const res = await fetch("https://api.airtable.com/v0/" + baseId + "/" + tableId + "?filterByFormula=" + filter, {
+    headers: { Authorization: "Bearer " + token }
   });
   const json = await res.json();
 
@@ -51,10 +58,10 @@ document.getElementById("formulario").addEventListener("submit", async function 
     }
   };
 
-  const save = await fetch(\`https://api.airtable.com/v0/\${baseId}/\${tableId}\`, {
+  const save = await fetch("https://api.airtable.com/v0/" + baseId + "/" + tableId, {
     method: "POST",
     headers: {
-      Authorization: \`Bearer \${token}\`,
+      Authorization: "Bearer " + token,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ ...record, typecast: true })
@@ -72,3 +79,10 @@ document.getElementById("formulario").addEventListener("submit", async function 
     document.getElementById("mensaje").style.color = "red";
   }
 });
+"""
+
+fixed_js_path = "/mnt/data/form_corregido.js"
+with open(fixed_js_path, "w", encoding="utf-8") as f:
+    f.write(form_js_fixed)
+
+fixed_js_path
