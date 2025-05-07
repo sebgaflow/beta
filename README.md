@@ -1,5 +1,5 @@
 
-# Formulario Promovidos - Gobierno
+# Formulario Promovidos - 
 
 Formulario web conectado a Airtable para el registro de promovidos, con validación de duplicados por nombre completo y teléfono.
 
@@ -19,4 +19,4 @@ Formulario web conectado a Airtable para el registro de promovidos, con validaci
 
 ## Autor
 
-Gobierno del Estado de Morelos / Agencia de Transformación Digital
+Anónimo
