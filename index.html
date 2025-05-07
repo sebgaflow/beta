@@ -58,6 +58,35 @@
     <form id="formulario">
       <select name="dependencia" id="dependencia" required>
         <option value="">Selecciona una dependencia</option>
+<option value="CEAGUA">CEAGUA</option>
+<option value="COEVAL">COEVAL</option>
+<option value="Consejería Jurídica">Consejería Jurídica</option>
+<option value="Consejo de Ciencia y Tecnología">Consejo de Ciencia y Tecnología</option>
+<option value="Coordinación General de Movilidad y Transporte">Coordinación General de Movilidad y Transporte</option>
+<option value="DIF Morelos">DIF Morelos</option>
+<option value="Dirección de Atención a Migrantes">Dirección de Atención a Migrantes</option>
+<option value="IMPAJOVEN">IMPAJOVEN</option>
+<option value="INEIEM">INEIEM</option>
+<option value="Instituto de Deporte y Cultura Física del Estado de Morelos">Instituto de Deporte y Cultura Física del Estado de Morelos</option>
+<option value="Instituto de Economía y Bienestar">Instituto de Economía y Bienestar</option>
+<option value="IPIAM">IPIAM</option>
+<option value="Jefatura de la Oficina de la Gubernatura">Jefatura de la Oficina de la Gubernatura</option>
+<option value="SDEyT">SDEyT</option>
+<option value="Secretaría de Administración">Secretaría de Administración</option>
+<option value="Secretaría de Bienestar">Secretaría de Bienestar</option>
+<option value="Secretaría de Contraloría">Secretaría de Contraloría</option>
+<option value="Secretaría de Cultura">Secretaría de Cultura</option>
+<option value="Secretaría de Desarrollo Agropecuario">Secretaría de Desarrollo Agropecuario</option>
+<option value="Secretaría de Desarrollo Sustentable">Secretaría de Desarrollo Sustentable</option>
+<option value="Secretaría de Educación">Secretaría de Educación</option>
+<option value="Secretaría de Gobierno">Secretaría de Gobierno</option>
+<option value="Secretaría de Hacienda">Secretaría de Hacienda</option>
+<option value="Secretaría de Infraestructura">Secretaría de Infraestructura</option>
+<option value="Secretaría de las Mujeres">Secretaría de las Mujeres</option>
+<option value="Secretaría de prueba">Secretaría de prueba</option>
+<option value="Secretaría de Salud">Secretaría de Salud</option>
+<option value="Secretaría de Seguridad y Protección Ciudadana">Secretaría de Seguridad y Protección Ciudadana</option>
+<option value="Secretaría de Turismo">Secretaría de Turismo</option>
         <option value="CEAGUA">CEAGUA</option>
         <option value="COEVAL">COEVAL</option>
         <option value="Consejería Jurídica">Consejería Jurídica</option>
@@ -82,7 +111,7 @@
   <script>
     const token = 'patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc';
     const baseId = 'tblefXMYV3zUmEwXk';
-    const tableName = 'tblefXMYV3zUmEwXk';
+    const tableName = 'Imported table';
 
     document.getElementById('formulario').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -93,7 +122,7 @@
       const telefono = form.get('telefono').trim();
 
       const filtro = encodeURIComponent(`OR({Teléfono a 10 dígitos_promovido} = "${telefono}", AND({Nombre(s)_promovido} = "${nombres}", {Primer Apellido (OBLIGATORIO)_promovido} = "${apellido1}", {Segundo Apellido_promovido} = "${apellido2}"))`);
-      const url = `https://api.airtable.com/v0/${baseId}/${tableName}?filterByFormula=${filtro}`;
+      const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}?filterByFormula=${filtro}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
