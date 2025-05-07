@@ -1,4 +1,3 @@
-# Reescribimos el archivo corregido tras el reset de entorno
 
 form_js_fixed = """
 const token = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
