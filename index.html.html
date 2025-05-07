@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario de Registro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      padding: 32px;
+      margin: auto;
+      border-radius: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    h2 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 1px solid #d0d0d0;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #8e8e93;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    #mensaje {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Formulario de Registro</h2>
+    <form id="formulario">
+      <select name="dependencia" id="dependencia" required>
+        <option value="">Cargando dependencias...</option>
+      </select>
+      <input type="text" name="promotor" placeholder="Promotor" required>
+      <input type="text" name="nombres" placeholder="Nombre(s)" required>
+      <input type="text" name="apellido1" placeholder="Primer Apellido" required>
+      <input type="text" name="apellido2" placeholder="Segundo Apellido" required>
+      <input type="text" name="calle" placeholder="Nombre de la calle" required>
+      <input type="number" name="numext" placeholder="Número exterior" required>
+      <input type="text" name="numint" placeholder="Número interior (opcional)">
+      <input type="text" name="colonia" placeholder="Colonia" required>
+      <input type="number" name="cp" placeholder="Código postal" required>
+      <input type="number" name="seccion" placeholder="Clave de la sección" required>
+      <input type="tel" name="telefono" placeholder="Teléfono a 10 dígitos" required>
+      <button type="submit">Enviar</button>
+    </form>
+    <div id="mensaje"></div>
+  </div>
+
+  <script>
+    const token = 'patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc';
+    const baseId = 'tblefXMYV3zUmEwXk';
+    const tableName = 'Imported table';
+    const dependenciaTable = 'Dependencia';
+
+    // Cargar opciones dinámicamente desde la tabla "Dependencia"
+    fetch(`https://api.airtable.com/v0/${baseId}/${dependenciaTable}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById('dependencia');
+      select.innerHTML = '<option value="">Selecciona una dependencia</option>';
+      data.records.forEach(record => {
+        const option = document.createElement('option');
+        option.value = record.id;
+        option.textContent = record.fields["DEPENDENCIA"];
+        select.appendChild(option);
+      });
+    });
+
+    document.getElementById('formulario').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const nombres = form.get('nombres').trim();
+      const apellido1 = form.get('apellido1').trim();
+      const apellido2 = form.get('apellido2').trim();
+      const telefono = form.get('telefono').trim();
+
+      const filtro = encodeURIComponent(`OR({Teléfono a 10 dígitos_promovido} = "${telefono}", AND({Nombre(s)_promovido} = "${nombres}", {Primer Apellido (OBLIGATORIO)_promovido} = "${apellido1}", {Segundo Apellido_promovido} = "${apellido2}"))`);
+      const url = `https://api.airtable.com/v0/${baseId}/${tableName}?filterByFormula=${filtro}`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (data.records.length > 0) {
+        document.getElementById('mensaje').innerHTML = '❌ Ya existe un registro con ese nombre completo o teléfono.';
+        document.getElementById('mensaje').style.color = 'red';
+        return;
+      }
+
+      const fields = {
+        'Dependencia': [form.get('dependencia')],
+        'Promotor': form.get('promotor'),
+        'Nombre(s)_promovido': nombres,
+        'Primer Apellido (OBLIGATORIO)_promovido': apellido1,
+        'Segundo Apellido_promovido': apellido2,
+        'Nombre de la calle del domicilio_promovido': form.get('calle'),
+        'Número exterior_promovido': parseInt(form.get('numext')),
+        'Número interior_promovido': form.get('numint'),
+        'Colonia_promovido': form.get('colonia'),
+        'Código postal_promovido': parseInt(form.get('cp')),
+        'Clave de la sección (OBLIGATORIO)_promovido': parseInt(form.get('seccion')),
+        'Teléfono a 10 dígitos_promovido': telefono
+      };
+
+      const createRes = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ fields })
+      });
+
+      if (createRes.ok) {
+        document.getElementById('mensaje').innerHTML = '✅ Registro exitoso.';
+        document.getElementById('mensaje').style.color = 'green';
+        document.getElementById('formulario').reset();
+      } else {
+        document.getElementById('mensaje').innerHTML = '❌ Error al registrar. Intenta nuevamente.';
+        document.getElementById('mensaje').style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>
