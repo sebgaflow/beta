@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -106,7 +107,8 @@
   <script>
     const token = 'patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc';
     const baseId = 'tblefXMYV3zUmEwXk';
-    const tableName = 'tblefXMYV3zUmEwXk';
+    const tableName = 'registros';
+    const viewId = 'viwHXjTHi1mbxmX2a';
 
     document.getElementById('formulario').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -116,8 +118,8 @@
       const apellido2 = form.get('apellido2').trim();
       const telefono = form.get('telefono').trim();
 
-      const filtro = encodeURIComponent(`OR({Teléfono a 10 dígitos_promovido} = "${telefono}", AND({Nombre(s)_promovido} = "${nombres}", {Primer Apellido (OBLIGATORIO)_promovido} = "${apellido1}", {Segundo Apellido_promovido} = "${apellido2}"))`);
-      const url = `https://api.airtable.com/v0/${baseId}/${tableName}?filterByFormula=${filtro}`;
+      const filtro = encodeURIComponent(`OR({Teléfono a 10 dígitos_promovido} = "${telefono}", AND({Nombre(s)_promovido} = "${nombres}", {Primer Apellido  (OBLIGATORIO)_promovido} = "${apellido1}", {Segundo Apellido_promovido} = "${apellido2}"))`);
+      const url = `https://api.airtable.com/v0/${baseId}/${tableName}?view=${viewId}&filterByFormula=${filtro}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -134,14 +136,14 @@
         'Dependencia': form.get('dependencia'),
         'Promotor': form.get('promotor'),
         'Nombre(s)_promovido': nombres,
-        'Primer Apellido (OBLIGATORIO)_promovido': apellido1,
+        'Primer Apellido  (OBLIGATORIO)_promovido': apellido1,
         'Segundo Apellido_promovido': apellido2,
         'Nombre de la calle del domicilio_promovido': form.get('calle'),
         'Número exterior_promovido': parseInt(form.get('numext')),
         'Número interior_promovido': form.get('numint'),
         'Colonia_promovido': form.get('colonia'),
         'Código postal_promovido': parseInt(form.get('cp')),
-        'Clave de la sección (OBLIGATORIO)_promovido': parseInt(form.get('seccion')),
+        'Clave de la sección  (OBLIGATORIO)_promovido': parseInt(form.get('seccion')),
         'Teléfono a 10 dígitos_promovido': telefono
       };
 
@@ -166,4 +168,3 @@
   </script>
 </body>
 </html>
-
