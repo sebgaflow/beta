@@ -1,0 +1,7 @@
+
+# Archivos ignorados para este proyecto web estático
+.DS_Store
+node_modules/
+.env
+dist/
+*.log
