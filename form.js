@@ -3,7 +3,7 @@
 const token  = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
 const baseId = "appi5iq2xznnBxNvJ";
 const table  = "tblefXMYV3zUmEwXk";
-const fields = {
+const F = {
   dependencia: "fldUxubMvcv8fTvUl",
   promotor:    "fldBYSsQW7AuCZIxw",
   nombres:     "fldZD3e40hfZWkBrC",
@@ -24,59 +24,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const f = new FormData(form);
-    const telefono  = f.get("telefono");
-    const nombres   = f.get("nombres");
-    const apellido1 = f.get("apellido1");
-    const apellido2 = f.get("apellido2");
+    // 1) Recogemos y limpiamos inputs
+    const f        = new FormData(form);
+    const nombres  = f.get("nombres").trim();
+    const ape1     = f.get("apellido1").trim();
+    const ape2     = f.get("apellido2").trim();
+    const telefono = f.get("telefono").trim();
 
-    // ——— 1) Validar duplicado por teléfono —————————————————————
-    const phoneFilter = encodeURIComponent(
-      `{${fields.telefono}}='${telefono}'`
-    );
-    const phoneRes = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${phoneFilter}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const phoneJson = await phoneRes.json();
-    if (phoneJson.records?.length > 0) {
-      msg.textContent = "❌ Error: este número ya fue registrado.";
-      msg.style.color   = "red";
-      return;
-    }
-
-    // ——— 2) Validar duplicado por persona (nombre + apellidos) ——————
-    const nameFormula = `AND(
-      {${fields.nombres}}='${nombres}',
-      {${fields.apellido1}}='${apellido1}',
-      {${fields.apellido2}}='${apellido2}'
+    // 2) Construimos la fórmula OR(persona, teléfono)
+    const personaCond = `AND(
+      {${F.nombres}}='${nombres}',
+      {${F.apellido1}}='${ape1}',
+      {${F.apellido2}}='${ape2}'
     )`;
-    const nameFilter = encodeURIComponent(nameFormula);
-    const nameRes = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${nameFilter}`,
-      { headers: { Authorization: `Bearer ${token}` } }
+    const phoneCond   = `{${F.telefono}}='${telefono}'`;
+    const filter      = encodeURIComponent(`OR(${personaCond},${phoneCond})`);
+
+    // 3) Interacción con Airtable para ver si ya existe algo
+    //    Aquí es donde hacemos el fetch a la API con filterByFormula:
+    const res = await fetch(
+      `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${filter}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
     );
-    const nameJson = await nameRes.json();
-    if (nameJson.records?.length > 0) {
-      msg.textContent = "❌ Error: esta persona ya fue registrada.";
-      msg.style.color   = "red";
+    const data = await res.json();
+
+    // 4) Si Airtable devuelve registros, decidimos el mensaje
+    if (data.records?.length > 0) {
+      const rec         = data.records[0].fields;
+      const dupPersona  = 
+        rec[F.nombres]   === nombres &&
+        rec[F.apellido1] === ape1   &&
+        rec[F.apellido2] === ape2;
+      const dupTelefono = rec[F.telefono] === telefono;
+
+      if (dupPersona && dupTelefono) {
+        msg.textContent = "❌ Error: esta persona y este número ya fueron registrados.";
+      } else if (dupPersona) {
+        msg.textContent = "❌ Error: esta persona ya fue registrada.";
+      } else { 
+        msg.textContent = "❌ Error: este número ya fue registrado.";
+      }
+      msg.style.color = "red";
       return;
     }
 
-    // ——— 3) Si no hay duplicados, armar y enviar el registro ——————
+    // 5) Si no hay duplicados, enviamos el registro
     const recordFields = {
-      [fields.dependencia]: f.get("dependencia"),
-      [fields.promotor]:    f.get("promotor"),
-      [fields.nombres]:     nombres,
-      [fields.apellido1]:   apellido1,
-      [fields.apellido2]:   apellido2,
-      [fields.calle]:       f.get("calle"),
-      [fields.numext]:      parseInt(f.get("numext"), 10),
-      [fields.numint]:      f.get("numint"),
-      [fields.colonia]:     f.get("colonia"),
-      [fields.cp]:          parseInt(f.get("cp"), 10),
-      [fields.seccion]:     parseInt(f.get("seccion"), 10),
-      [fields.telefono]:    telefono
+      [F.dependencia]: f.get("dependencia"),
+      [F.promotor]:    f.get("promotor"),
+      [F.nombres]:     nombres,
+      [F.apellido1]:   ape1,
+      [F.apellido2]:   ape2,
+      [F.calle]:       f.get("calle"),
+      [F.numext]:      parseInt(f.get("numext"), 10),
+      [F.numint]:      f.get("numint"),
+      [F.colonia]:     f.get("colonia"),
+      [F.cp]:          parseInt(f.get("cp"), 10),
+      [F.seccion]:     parseInt(f.get("seccion"), 10),
+      [F.telefono]:    telefono
     };
 
     const saveRes = await fetch(
