@@ -81,7 +81,7 @@
     const tableName = 'Imported table';
     const dependenciaTable = 'Dependencia';
 
-    // Cargar opciones del campo vinculado
+    // Cargar opciones dinámicamente desde la tabla "Dependencia"
     fetch(`https://api.airtable.com/v0/${baseId}/${dependenciaTable}`, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -94,12 +94,11 @@
       data.records.forEach(record => {
         const option = document.createElement('option');
         option.value = record.id;
-        option.textContent = record.fields.Nombre || record.id;
+        option.textContent = record.fields["DEPENDENCIA"];
         select.appendChild(option);
       });
     });
 
-    // Manejo del formulario
     document.getElementById('formulario').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = new FormData(e.target);
