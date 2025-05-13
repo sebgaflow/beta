@@ -24,22 +24,17 @@
   <div class="container">
     <h2>Formulario de Registro</h2>
     <form id="formulario">
-      <!-- Dependencia: se carga dinámicamente -->
+      <!-- Dependencia -->
       <select id="dependencia" name="dependencia" required>
         <option value="">Selecciona una dependencia</option>
       </select>
 
-      <!-- Promotor: se carga según la dependencia -->
+      <!-- Promotor filtrado -->
       <select id="promotor" name="promotor" required>
         <option value="">Selecciona un promotor</option>
       </select>
 
-      <!-- Para crear nuevo promotor -->
-      <input type="text" id="promotor_nuevo"
-             placeholder="Nombre completo del promotor"
-             style="display:none;">
-
-      <!-- Resto de campos personales -->
+      <!-- Datos personales -->
       <input name="nombres"    placeholder="Nombre(s)"            required>
       <input name="apellido1"  placeholder="Primer Apellido"      required>
       <input name="apellido2"  placeholder="Segundo Apellido"     required>
