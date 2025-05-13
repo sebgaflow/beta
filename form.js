@@ -1,20 +1,22 @@
 
-const API_KEY = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";                // ← tu PAT
+/******************************************************************
+ * Configuración Airtable
+ *****************************************************************/
+const API_KEY = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";          // ← tu PAT
 const BASE_ID = "appi5iq2xznnBxNvJ";
 
-const TBL_PROM = "tblriBT8T8hRMHmEZ";                  // Promotores
-const TBL_REG  = "tblefXMYV3zUmEwXk";                  // Registros
+const TBL_PROM = "tblriBT8T8hRMHmEZ";           // Promotores
+const TBL_REG  = "tblefXMYV3zUmEwXk";           // Registros
 
 /* Campos tabla Promotores */
-const PROM_DEP_SELECT = "fldWIhpiouC0iPslt";           // single‑select
-const PROM_NOMBRE     = "fldXhZQ5homWIvAib";           // texto promotor
+const PROM_DEP_SELECT = "fldWIhpiouC0iPslt";    // single‑select (dependencia)
+const PROM_NOMBRE     = "fldXhZQ5homWIvAib";    // texto promotor
 
 /* Campos tabla Registros */
-const REG_DEP_LNK   = "fldUjZjWXuJ6ujKXB";             // link a Dependencias
-const REG_PROM_LNK  = "fldBYSsQW7AuCZIxw";             // link a Promotores
-const REG_DEP_SSEL  = "fldXXXXX";                      // ← ID single‑select (texto)
+const REG_DEP_LNK  = "fldUjZjWXuJ6ujKXB";       // link → Dependencia
+const REG_PROM_LNK = "fldBYSsQW7AuCZIxw";       // link → Promotor
 
-/* Otros campos (sin cambios) */
+/* Campos de validación / otros */
 const F = {
   nombres  :"fldZD3e40hfZWkBrC",
   apellido1:"fldvTQJ9AJXZAq6Go",
@@ -52,11 +54,14 @@ const DEPENDENCIAS = [
 ];
 
 /******************************************************************
- * Helpers & refs
+ * Helpers
  *****************************************************************/
-const headers={Authorization:`Bearer ${API_KEY}`};
-const apiURL =(tbl,qs="")=>`https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs?"?"+qs:""}`;
+const headers = { Authorization:`Bearer ${API_KEY}` };
+const apiURL  = (tbl,qs="") => `https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs?"?"+qs:""}`;
 
+/******************************************************************
+ * UI refs
+ *****************************************************************/
 const depEl = document.getElementById("dependencia");
 const proEl = document.getElementById("promotor");
 const form  = document.getElementById("formulario");
@@ -77,9 +82,9 @@ depEl.addEventListener("change", async ()=>{
   proEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
   if(!depEl.value) return;
 
-  const depNombre=DEPENDENCIAS.find(d=>d.id===depEl.value).nombre;
-  const filter   = encodeURIComponent(`{${PROM_DEP_SELECT}}='${depNombre}'`);
-  const r        = await fetch(apiURL(TBL_PROM,`filterByFormula=${filter}`),{headers}).then(x=>x.json());
+  const depNombre = DEPENDENCIAS.find(d=>d.id===depEl.value).nombre;
+  const filter    = encodeURIComponent(`{${PROM_DEP_SELECT}}='${depNombre}'`);
+  const r         = await fetch(apiURL(TBL_PROM,`filterByFormula=${filter}`),{headers}).then(x=>x.json());
 
   r.records.forEach(rec=>{
     const o=document.createElement("option");
@@ -94,57 +99,59 @@ depEl.addEventListener("change", async ()=>{
  *****************************************************************/
 form.addEventListener("submit", async e=>{
   e.preventDefault(); msg.textContent="";
-  const f   = new FormData(form);
-  const tel = f.get("telefono").trim();
-  const nom = f.get("nombres").trim();
-  const a1  = f.get("apellido1").trim();
-  const a2  = f.get("apellido2").trim();
-  const depId   = depEl.value;
-  const depName = DEPENDENCIAS.find(d=>d.id===depId).nombre;
-  const proId   = proEl.value;
+  const f     = new FormData(form);
+  const tel   = f.get("telefono").trim();
+  const nom   = f.get("nombres").trim();
+  const ape1  = f.get("apellido1").trim();
+  const ape2  = f.get("apellido2").trim();
+  const depId = depEl.value;
+  const proId = proEl.value;
 
-  if(!depId||!proId){
+  if(!depId || !proId){
     msg.textContent="❌ Selecciona dependencia y promotor.";
     msg.style.color="red"; return;
   }
 
   /* Duplicado teléfono */
-  const dupTel=await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`{${F.telefono}}='${tel}'`)}`),{headers}).then(r=>r.json());
+  const dupTel = await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`{${F.telefono}}='${tel}'`)}`),{headers}).then(r=>r.json());
   if(dupTel.records?.length){msg.textContent="❌ Número ya registrado."; msg.style.color="red"; return;}
 
   /* Duplicado persona */
-  const dupPer=await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`AND({${F.nombres}}='${nom}',{${F.apellido1}}='${a1}',{${F.apellido2}}='${a2}')`)}`),{headers}).then(r=>r.json());
+  const dupPer = await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`AND({${F.nombres}}='${nom}',{${F.apellido1}}='${ape1}',{${F.apellido2}}='${ape2}')`)}`),{headers}).then(r=>r.json());
   if(dupPer.records?.length){msg.textContent="❌ Persona ya registrada."; msg.style.color="red"; return;}
 
   /* Guardar registro */
   const payload={
     fields:{
-      [REG_DEP_LNK] : [depId],     // linked‑record
-      [REG_DEP_SSEL]:  depName,    // single‑select (texto)
+      [REG_DEP_LNK] : [depId],
       [REG_PROM_LNK]: [proId],
-      [F.nombres]   : nom,
-      [F.apellido1] : a1,
-      [F.apellido2] : a2,
-      [F.calle]     : f.get("calle").trim(),
-      [F.numext]    : parseInt(f.get("numext"),10),
-      [F.numint]    : f.get("numint").trim(),
-      [F.colonia]   : f.get("colonia").trim(),
-      [F.cp]        : parseInt(f.get("cp"),10),
-      [F.seccion]   : parseInt(f.get("seccion"),10),
-      [F.telefono]  : tel
+      [F.nombres]:   nom,
+      [F.apellido1]: ape1,
+      [F.apellido2]: ape2,
+      [F.calle]:     f.get("calle").trim(),
+      [F.numext]:    parseInt(f.get("numext"),10),
+      [F.numint]:    f.get("numint").trim(),
+      [F.colonia]:   f.get("colonia").trim(),
+      [F.cp]:        parseInt(f.get("cp"),10),
+      [F.seccion]:   parseInt(f.get("seccion"),10),
+      [F.telefono]:  tel
     },typecast:true
   };
 
   const res=await fetch(apiURL(TBL_REG),{
-    method:"POST",headers:{...headers,"Content-Type":"application/json"},
+    method:"POST",
+    headers:{...headers,"Content-Type":"application/json"},
     body:JSON.stringify(payload)
   });
 
   if(res.ok){
-    msg.textContent="✅ Registro exitoso."; msg.style.color="green";
-    form.reset(); proEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
+    msg.textContent="✅ Registro exitoso.";
+    msg.style.color="green";
+    form.reset();
+    proEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
   }else{
     console.error(await res.json());
-    msg.textContent="❌ Error al enviar."; msg.style.color="red";
+    msg.textContent="❌ Error al enviar.";
+    msg.style.color="red";
   }
 });
