@@ -2,18 +2,19 @@
 const API_KEY = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";                // ← tu PAT
 const BASE_ID = "appi5iq2xznnBxNvJ";
 
-const TBL_PROM = "tblriBT8T8hRMHmEZ";                 // Promotores
-const TBL_REG  = "tblefXMYV3zUmEwXk";                 // Registros
+const TBL_PROM = "tblriBT8T8hRMHmEZ";                  // Promotores
+const TBL_REG  = "tblefXMYV3zUmEwXk";                  // Registros
 
-/* Campos en Promotores */
-const PROM_DEP_SELECT = "fldWIhpiouC0iPslt";          // single‑select
-const PROM_NOMBRE     = "fldXhZQ5homWIvAib";          // texto promotor
+/* Campos tabla Promotores */
+const PROM_DEP_SELECT = "fldWIhpiouC0iPslt";           // single‑select
+const PROM_NOMBRE     = "fldXhZQ5homWIvAib";           // texto promotor
 
-/* Campos en Registros */
-const REG_DEP_LNK  = "fldUjZjWXuJ6ujKXB";             // link Dependencia
-const REG_PROM_LNK = "fldBYSsQW7AuCZIxw";             // link Promotor
+/* Campos tabla Registros */
+const REG_DEP_LNK   = "fldUjZjWXuJ6ujKXB";             // link a Dependencias
+const REG_PROM_LNK  = "fldBYSsQW7AuCZIxw";             // link a Promotores
+const REG_DEP_SSEL  = "fldXXXXX";                      // ← ID single‑select (texto)
 
-/* Resto de campos (sin cambios) */
+/* Otros campos (sin cambios) */
 const F = {
   nombres  :"fldZD3e40hfZWkBrC",
   apellido1:"fldvTQJ9AJXZAq6Go",
@@ -51,18 +52,18 @@ const DEPENDENCIAS = [
 ];
 
 /******************************************************************
- * Helpers & UI refs
+ * Helpers & refs
  *****************************************************************/
-const headers = { Authorization:`Bearer ${API_KEY}` };
-const apiURL  = (tbl, qs="") => `https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs?"?"+qs:""}`;
+const headers={Authorization:`Bearer ${API_KEY}`};
+const apiURL =(tbl,qs="")=>`https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs?"?"+qs:""}`;
 
-const depEl  = document.getElementById("dependencia");
-const promEl = document.getElementById("promotor");
-const form   = document.getElementById("formulario");
-const msg    = document.getElementById("mensaje");
+const depEl = document.getElementById("dependencia");
+const proEl = document.getElementById("promotor");
+const form  = document.getElementById("formulario");
+const msg   = document.getElementById("mensaje");
 
 /******************************************************************
- * A) Poblar dependencias
+ * 1) Poblar dependencias
  *****************************************************************/
 DEPENDENCIAS.forEach(d=>{
   const o=document.createElement("option");
@@ -70,71 +71,78 @@ DEPENDENCIAS.forEach(d=>{
 });
 
 /******************************************************************
- * B) Filtrar promotores por dependencia (single‑select)
+ * 2) Al cambiar dependencia → filtrar promotores
  *****************************************************************/
 depEl.addEventListener("change", async ()=>{
-  promEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
+  proEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
   if(!depEl.value) return;
 
-  const depNombre = DEPENDENCIAS.find(d=>d.id===depEl.value).nombre;
-  const filter    = encodeURIComponent(`{${PROM_DEP_SELECT}}='${depNombre}'`);
-  const r         = await fetch(apiURL(TBL_PROM,`filterByFormula=${filter}`),{headers}).then(x=>x.json());
+  const depNombre=DEPENDENCIAS.find(d=>d.id===depEl.value).nombre;
+  const filter   = encodeURIComponent(`{${PROM_DEP_SELECT}}='${depNombre}'`);
+  const r        = await fetch(apiURL(TBL_PROM,`filterByFormula=${filter}`),{headers}).then(x=>x.json());
 
   r.records.forEach(rec=>{
     const o=document.createElement("option");
-    o.value=rec.id; o.textContent=rec.fields[PROM_NOMBRE]; promEl.appendChild(o);
+    o.value=rec.id;
+    o.textContent=rec.fields[PROM_NOMBRE] || "(sin nombre)";
+    proEl.appendChild(o);
   });
 });
 
 /******************************************************************
- * C) Submit con validaciones (sin “nuevo promotor”)
+ * 3) Enviar formulario
  *****************************************************************/
 form.addEventListener("submit", async e=>{
   e.preventDefault(); msg.textContent="";
-  const f=new FormData(form);
+  const f   = new FormData(form);
   const tel = f.get("telefono").trim();
   const nom = f.get("nombres").trim();
   const a1  = f.get("apellido1").trim();
   const a2  = f.get("apellido2").trim();
-  const depId  = depEl.value;
-  const promId = promEl.value;
+  const depId   = depEl.value;
+  const depName = DEPENDENCIAS.find(d=>d.id===depId).nombre;
+  const proId   = proEl.value;
 
-  if(!depId || !promId){
-    msg.textContent="❌ Selecciona dependencia y promotor."; msg.style.color="red"; return;
+  if(!depId||!proId){
+    msg.textContent="❌ Selecciona dependencia y promotor.";
+    msg.style.color="red"; return;
   }
 
-  /* Duplicados */
-  const dupTel = await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`{${F.telefono}}='${tel}'`)}`),{headers}).then(r=>r.json());
+  /* Duplicado teléfono */
+  const dupTel=await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`{${F.telefono}}='${tel}'`)}`),{headers}).then(r=>r.json());
   if(dupTel.records?.length){msg.textContent="❌ Número ya registrado."; msg.style.color="red"; return;}
 
-  const dupPer = await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`AND({${F.nombres}}='${nom}',{${F.apellido1}}='${a1}',{${F.apellido2}}='${a2}')`)}`),{headers}).then(r=>r.json());
+  /* Duplicado persona */
+  const dupPer=await fetch(apiURL(TBL_REG,`filterByFormula=${encodeURIComponent(`AND({${F.nombres}}='${nom}',{${F.apellido1}}='${a1}',{${F.apellido2}}='${a2}')`)}`),{headers}).then(r=>r.json());
   if(dupPer.records?.length){msg.textContent="❌ Persona ya registrada."; msg.style.color="red"; return;}
 
   /* Guardar registro */
   const payload={
     fields:{
-      [REG_DEP_LNK]: [depId],
-      [REG_PROM_LNK]:[promId],
-      [F.nombres]: nom,
-      [F.apellido1]:a1,
-      [F.apellido2]:a2,
-      [F.calle]:    f.get("calle").trim(),
-      [F.numext]:   parseInt(f.get("numext"),10),
-      [F.numint]:   f.get("numint").trim(),
-      [F.colonia]:  f.get("colonia").trim(),
-      [F.cp]:       parseInt(f.get("cp"),10),
-      [F.seccion]:  parseInt(f.get("seccion"),10),
-      [F.telefono]: tel
+      [REG_DEP_LNK] : [depId],     // linked‑record
+      [REG_DEP_SSEL]:  depName,    // single‑select (texto)
+      [REG_PROM_LNK]: [proId],
+      [F.nombres]   : nom,
+      [F.apellido1] : a1,
+      [F.apellido2] : a2,
+      [F.calle]     : f.get("calle").trim(),
+      [F.numext]    : parseInt(f.get("numext"),10),
+      [F.numint]    : f.get("numint").trim(),
+      [F.colonia]   : f.get("colonia").trim(),
+      [F.cp]        : parseInt(f.get("cp"),10),
+      [F.seccion]   : parseInt(f.get("seccion"),10),
+      [F.telefono]  : tel
     },typecast:true
   };
 
   const res=await fetch(apiURL(TBL_REG),{
-    method:"POST", headers:{...headers,"Content-Type":"application/json"},
+    method:"POST",headers:{...headers,"Content-Type":"application/json"},
     body:JSON.stringify(payload)
   });
+
   if(res.ok){
     msg.textContent="✅ Registro exitoso."; msg.style.color="green";
-    form.reset(); promEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
+    form.reset(); proEl.innerHTML=`<option value="">Selecciona un promotor</option>`;
   }else{
     console.error(await res.json());
     msg.textContent="❌ Error al enviar."; msg.style.color="red";
