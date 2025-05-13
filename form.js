@@ -1,22 +1,21 @@
-/******************************************************************
- * Configuración de Airtable
+
  *****************************************************************/
-const API_KEY      = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc"; // ← pon aquí tu PAT
+const API_KEY      = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";     // ← pon aquí tu PAT
 const BASE_ID      = "appi5iq2xznnBxNvJ";
 
 /* Tablas */
-const TBL_DEP      = "tblhnh0UVIIbHMZFr"; // Dependencias
-const TBL_PROM     = "tblriBT8T8hRMHmEZ"; // Promotores
-const TBL_REG      = "tblefXMYV3zUmEwXk"; // Registros (formulario final)
+const TBL_PROM     = "tblriBT8T8hRMHmEZ";   // Promotores
+const TBL_REG      = "tblefXMYV3zUmEwXk";   // Registros (formulario final)
 
-/* Campos (IDs) */
-const DEP_NOMBRE   = "fldP7TkiFTkfsyo9p"; // texto en Dependencias
-const PROM_DEP_LNK = "fldwRyuKRjKksPyHf"; // link a Dependencias en Promotores
-const PROM_NOMBRE  = "fldXhZQ5homWIvAib"; // texto promotor
-const REG_DEP_LNK  = "fldUjZjWXuJ6ujKXB"; // link a Dependencias en Registros
-const REG_PROM_LNK = "fldBYSsQW7AuCZIxw"; // link a Promotores en Registros
+/* Campos en Promotores */
+const PROM_DEP_LNK = "fldwRyuKRjKksPyHf";   // link a Dependencias
+const PROM_NOMBRE  = "fldXhZQ5homWIvAib";   // texto promotor
 
-/* Resto de campos (siguen igual) */
+/* Campos en Registros */
+const REG_DEP_LNK  = "fldUjZjWXuJ6ujKXB";   // link a Dependencias
+const REG_PROM_LNK = "fldBYSsQW7AuCZIxw";   // link a Promotores
+
+/* Otros campos (sin cambios) */
 const F = {
   nombres   : "fldZD3e40hfZWkBrC",
   apellido1 : "fldvTQJ9AJXZAq6Go",
@@ -31,11 +30,33 @@ const F = {
 };
 
 /******************************************************************
+ * Dependencias (array estático con recordId + nombre)
+ *****************************************************************/
+const DEPENDENCIAS = [
+  { id: "recIulfWPlB8DajsG", nombre: "JEFATURA DE LA OFICINA DE LA GUBERNATURA" },
+  { id: "recgYa0wEccO3g5o7", nombre: "SECRETARÍA DE CULTURA" },
+  { id: "reckTHDp9tuX49FCx", nombre: "SECRETARÍA DE LA CONTRALORÍA" },
+  { id: "recjxD2RyioSIB7Lf", nombre: "SECRETARÍA DE EDUCACIÓN" },
+  { id: "rec6Z7vku5Yn0IC6G", nombre: "SECRETARÍA DE HACIENDA" },
+  { id: "recQkcwxHQkyrnOBK", nombre: "SECRETARÍA DE LAS MUJERES" },
+  { id: "recBmuK23Qdx185aT", nombre: "SECRETARÍA DE SEGURIDAD PÚBLICA Y SEGURIDAD CIUDADANA" },
+  { id: "recYc5ryaiABefhA2", nombre: "SECRETARÍA DE DESARROLLO AGROPECUARIO" },
+  { id: "recZ6kGSk7xAe16pG", nombre: "SECRETARÍA DE ADMINISTRACIÓN" },
+  { id: "rec832QcmrwO8zJW3", nombre: "SECRETARÍA DE INFRAESTRUCTURA" },
+  { id: "recUpPfDJGmRYDrHs", nombre: "SECRETARÍA DE SALUD" },
+  { id: "rec2MDnoMgTkdaUmU", nombre: "SECRETARÍA DE DESARROLLO SUSTENTABLE" },
+  { id: "rec0eA8HMeTjub8KG", nombre: "SECRETARÍA DE DESARROLLO ECONÓMICO" },
+  { id: "recru18xEwJXaD0kb", nombre: "SECRETARÍA DE GOBIERNO" },
+  { id: "rechTpzFtWgpUKXxt", nombre: "SECRETARÍA DE BIENESTAR" },
+  { id: "recl7TAVIA1x8aeqR", nombre: "CONSEJERÍA JURÍDICA" },
+  { id: "recLdAybMrn4YmwgB", nombre: "SECRETARÍA DE TURISMO" }
+];
+
+/******************************************************************
  * Helpers
  *****************************************************************/
 const headers = { Authorization: `Bearer ${API_KEY}` };
-const apiURL   = (tbl, qs="") =>
-  `https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs ? "?" + qs : ""}`;
+const apiURL  = (tbl, qs="") => `https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs ? "?" + qs : ""}`;
 
 /******************************************************************
  * UI refs
@@ -47,18 +68,14 @@ const form         = document.getElementById("formulario");
 const msgBox       = document.getElementById("mensaje");
 
 /******************************************************************
- *  A) Cargar dependencias al iniciar
+ *  A) Poblar dependencias desde el array estático
  *****************************************************************/
-fetch(apiURL(TBL_DEP), { headers })
-  .then(r => r.json())
-  .then(({ records }) => {
-    records.forEach(rec => {
-      const opt = document.createElement("option");
-      opt.value       = rec.id;                 // recordId
-      opt.textContent = rec.fields[DEP_NOMBRE]; // nombre visible
-      depEl.appendChild(opt);
-    });
-  });
+DEPENDENCIAS.forEach(dep => {
+  const o = document.createElement("option");
+  o.value       = dep.id;      // recordId
+  o.textContent = dep.nombre;
+  depEl.appendChild(o);
+});
 
 /******************************************************************
  *  B) Al cambiar dependencia, poblar promotores
@@ -68,7 +85,7 @@ depEl.addEventListener("change", async () => {
   promNuevoInp.style.display = "none";
   promNuevoInp.value = "";
 
-  if (!depEl.value) return;
+  if (!depEl.value) return;                 // sin selección
 
   const filter = encodeURIComponent(`{${PROM_DEP_LNK}}='${depEl.value}'`);
   const res    = await fetch(apiURL(TBL_PROM, `filterByFormula=${filter}`), { headers });
@@ -81,11 +98,10 @@ depEl.addEventListener("change", async () => {
     promEl.appendChild(opt);
   });
 
-  // Opción para añadir nuevo
-  const optNuevo = document.createElement("option");
-  optNuevo.value = "__nuevo__";
-  optNuevo.textContent = "Agregar nuevo promotor…";
-  promEl.appendChild(optNuevo);
+  const optNew = document.createElement("option");
+  optNew.value = "__nuevo__";
+  optNew.textContent = "Agregar nuevo promotor…";
+  promEl.appendChild(optNew);
 });
 
 /******************************************************************
@@ -107,55 +123,42 @@ promEl.addEventListener("change", () => {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   msgBox.textContent = "";
+  const f      = new FormData(form);
+  const tel    = f.get("telefono").trim();
+  const nombre = f.get("nombres").trim();
+  const ape1   = f.get("apellido1").trim();
+  const ape2   = f.get("apellido2").trim();
+  const depId  = depEl.value;
+  let   promId = promEl.value;
 
-  /* 1. Leer valores */
-  const f        = new FormData(form);
-  const tel      = f.get("telefono").trim();
-  const nombre   = f.get("nombres").trim();
-  const ape1     = f.get("apellido1").trim();
-  const ape2     = f.get("apellido2").trim();
-  const depId    = depEl.value;
-  let   promId   = promEl.value;          // puede ser "__nuevo__"
+  /* 1. Duplicados */
+  const telRes = await fetch(apiURL(TBL_REG, `filterByFormula=${encodeURIComponent(`{${F.telefono}}='${tel}'`)}`), { headers }).then(r=>r.json());
+  if (telRes.records?.length) { msgBox.textContent = "❌ Número ya registrado."; msgBox.style.color="red"; return; }
+  const perRes = await fetch(apiURL(TBL_REG, `filterByFormula=${encodeURIComponent(`AND({${F.nombres}}='${nombre}',{${F.apellido1}}='${ape1}',{${F.apellido2}}='${ape2}')`)}`), { headers }).then(r=>r.json());
+  if (perRes.records?.length) { msgBox.textContent = "❌ Persona ya registrada."; msgBox.style.color="red"; return; }
 
-  /* 2. Validar duplicados en Registros */
-  const telFilter = encodeURIComponent(`{${F.telefono}}='${tel}'`);
-  const perFilter = encodeURIComponent(`AND({${F.nombres}}='${nombre}',{${F.apellido1}}='${ape1}',{${F.apellido2}}='${ape2}')`);
-  const dupTel = await fetch(apiURL(TBL_REG, `filterByFormula=${telFilter}`), { headers }).then(r=>r.json());
-  if (dupTel.records?.length) {
-    msgBox.textContent = "❌ Error: este número ya fue registrado.";
-    msgBox.style.color = "red"; return;
-  }
-  const dupPer = await fetch(apiURL(TBL_REG, `filterByFormula=${perFilter}`), { headers }).then(r=>r.json());
-  if (dupPer.records?.length) {
-    msgBox.textContent = "❌ Error: esta persona ya fue registrada.";
-    msgBox.style.color = "red"; return;
-  }
-
-  /* 3. Si es nuevo promotor, crearlo primero */
+  /* 2. Nuevo promotor */
   if (promId === "__nuevo__") {
     const nuevoNombre = promNuevoInp.value.trim();
-    if (!nuevoNombre) {
-      msgBox.textContent = "❌ Escribe el nombre del nuevo promotor.";
-      msgBox.style.color = "red"; return;
-    }
+    if (!nuevoNombre) { msgBox.textContent = "❌ Escribe nombre del promotor."; msgBox.style.color="red"; return; }
     const res = await fetch(apiURL(TBL_PROM), {
       method : "POST",
       headers: { ...headers, "Content-Type": "application/json" },
       body   : JSON.stringify({
         fields: {
           [PROM_NOMBRE] : nuevoNombre,
-          [PROM_DEP_LNK]: [depId]          // linked‑record array
+          [PROM_DEP_LNK]: [depId]
         }
       })
     }).then(r=>r.json());
     promId = res.id;
   }
 
-  /* 4. Guardar registro final en la tabla Registros */
+  /* 3. Guardar registro */
   const payload = {
     fields: {
-      [REG_DEP_LNK] : [depId],           // dependencia (linked‑record)
-      [REG_PROM_LNK]: [promId],          // promotor   (linked‑record)
+      [REG_DEP_LNK] : [depId],
+      [REG_PROM_LNK]: [promId],
       [F.nombres]   : nombre,
       [F.apellido1] : ape1,
       [F.apellido2] : ape2,
