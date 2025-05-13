@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const ape2     = f.get("apellido2").trim();
 
     // 2) VALIDACIÓN #1: TELÉFONO
-    //    Aquí hacemos la primera interacción con la base:
     const phoneFilter = encodeURIComponent(`{${F.telefono}}='${telefono}'`);
     const phoneRes = await fetch(
       `https://api.airtable.com/v0/${baseId}/${table}?filterByFormula=${phoneFilter}`,
@@ -46,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 3) VALIDACIÓN #2: PERSONA (nombre + apellidos)
-    //    Segunda interacción con la base:
     const personFormula = encodeURIComponent(`
       AND(
         {${F.nombres}}='${nombres}',
