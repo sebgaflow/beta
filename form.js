@@ -1,112 +1,189 @@
-// form.js
-const token       = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc";
-const baseId      = "appi5iq2xznnBxNvJ";
-const promosTable = "tblriBT8T8hRMHmEZ";  // tu tabla Promotores
-const promosLink  = "fldwRyuKRjKksPyHf";   // campo Link a Dependencia
-const promosName  = "fldXhZQ5homWIvAib";   // campo texto nombre_promotor
-const regTable    = "tblefXMYV3zUmEwXk";   // tabla Registros
-const regDepLink  = "fldUjZjWXuJ6ujKXB";   // DEPENDENCIA_LINKED en Registros
-const regPromoFld = "fldMNgYuzOKHztVhK";   // lookup Promotores en Registros
+/******************************************************************
+ * Configuración de Airtable
+ *****************************************************************/
+const API_KEY      = "TU_API_KEY_AIRTABLE"; // ← pon aquí tu PAT
+const BASE_ID      = "appi5iq2xznnBxNvJ";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const depEl   = document.getElementById("dependencia");
-  const promoEl = document.getElementById("promotor");
-  const form    = document.getElementById("formulario");
-  const msg     = document.getElementById("mensaje");
+/* Tablas */
+const TBL_DEP      = "tblhnh0UVIIbHMZFr"; // Dependencias
+const TBL_PROM     = "tblriBT8T8hRMHmEZ"; // Promotores
+const TBL_REG      = "tblefXMYV3zUmEwXk"; // Registros (formulario final)
 
-  // 1) Al cambiar dependencia, recargo promotores
-  depEl.addEventListener("change", async () => {
-    promoEl.innerHTML = `<option value="">Selecciona un promotor</option>`;
+/* Campos (IDs) */
+const DEP_NOMBRE   = "fldP7TkiFTkfsyo9p"; // texto en Dependencias
+const PROM_DEP_LNK = "fldwRyuKRjKksPyHf"; // link a Dependencias en Promotores
+const PROM_NOMBRE  = "fldXhZQ5homWIvAib"; // texto promotor
+const REG_DEP_LNK  = "fldUjZjWXuJ6ujKXB"; // link a Dependencias en Registros
+const REG_PROM_LNK = "fldBYSsQW7AuCZIxw"; // link a Promotores en Registros
 
-    const depText = depEl.value;
-    if (!depText) return;
+/* Resto de campos (siguen igual) */
+const F = {
+  nombres   : "fldZD3e40hfZWkBrC",
+  apellido1 : "fldvTQJ9AJXZAq6Go",
+  apellido2 : "fldmZn2MhygKGbp5E",
+  calle     : "fldTXQpUayq03SqGP",
+  numext    : "fldzcyV7OD3UHbdyx",
+  numint    : "fldllGor8QzaTactq",
+  colonia   : "fldnVmj53rvm5RsdQ",
+  cp        : "fldU13HKpwypVx3qt",
+  seccion   : "fldhRiT7s8cnZJKhN",
+  telefono  : "fldPByjAjeIbIQB0t"
+};
 
-    try {
-      // Filtramos promotores cuyo linked-record Dependencia 
-      // tenga el nombre igual a depText. Airtable permite 
-      // filtrar linked-record por ID, pero si todos los 
-      // registros de Dependencia usan como Primary Field el 
-      // nombre de texto, se puede filtrar así:
-      const filter = encodeURIComponent(`{${promosLink}}='${depText}'`);
-      const url    = `https://api.airtable.com/v0/${baseId}/${promosTable}?filterByFormula=${filter}`;
-      const res    = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      const json   = await res.json();
+/******************************************************************
+ * Helpers
+ *****************************************************************/
+const headers = { Authorization: `Bearer ${API_KEY}` };
+const apiURL   = (tbl, qs="") =>
+  `https://api.airtable.com/v0/${BASE_ID}/${tbl}${qs ? "?" + qs : ""}`;
 
-      if (json.error) {
-        console.error("Airtable error:", json.error);
-        msg.textContent = "❌ Error al cargar promotores.";
-        msg.style.color = "red";
-        return;
-      }
+/******************************************************************
+ * UI refs
+ *****************************************************************/
+const depEl        = document.getElementById("dependencia");
+const promEl       = document.getElementById("promotor");
+const promNuevoInp = document.getElementById("promotor_nuevo");
+const form         = document.getElementById("formulario");
+const msgBox       = document.getElementById("mensaje");
 
-      (json.records || []).forEach(rec => {
-        const o = document.createElement("option");
-        o.value       = rec.id;
-        o.textContent = rec.fields[promosName] || "(sin nombre)";
-        promoEl.appendChild(o);
-      });
-
-    } catch (err) {
-      console.error("Fetch failed:", err);
-      msg.textContent = "❌ Error de red al cargar promotores.";
-      msg.style.color = "red";
-    }
+/******************************************************************
+ *  A) Cargar dependencias al iniciar
+ *****************************************************************/
+fetch(apiURL(TBL_DEP), { headers })
+  .then(r => r.json())
+  .then(({ records }) => {
+    records.forEach(rec => {
+      const opt = document.createElement("option");
+      opt.value       = rec.id;                 // recordId
+      opt.textContent = rec.fields[DEP_NOMBRE]; // nombre visible
+      depEl.appendChild(opt);
+    });
   });
 
-  // 2) Al enviar formulario
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    msg.textContent = "";
+/******************************************************************
+ *  B) Al cambiar dependencia, poblar promotores
+ *****************************************************************/
+depEl.addEventListener("change", async () => {
+  promEl.innerHTML = `<option value="">Selecciona un promotor</option>`;
+  promNuevoInp.style.display = "none";
+  promNuevoInp.value = "";
 
-    const f        = new FormData(form);
-    const depText  = f.get("dependencia");
-    const promoId  = f.get("promotor");
-    const payload  = {
-      fields: {
-        [regDepLink]: [depText],       // guardamos el texto como linked-record
-        [regPromoFld]: [promoId],      // ID del promotor elegido
-        nombres:       f.get("nombres").trim(),
-        apellido1:     f.get("apellido1").trim(),
-        apellido2:     f.get("apellido2").trim(),
-        calle:         f.get("calle").trim(),
-        numext:        parseInt(f.get("numext"), 10),
-        numint:        f.get("numint").trim(),
-        colonia:       f.get("colonia").trim(),
-        cp:            parseInt(f.get("cp"), 10),
-        seccion:       parseInt(f.get("seccion"), 10),
-        telefono:      f.get("telefono").trim()
-      },
-      typecast: true
-    };
+  if (!depEl.value) return;
 
-    try {
-      const saveRes  = await fetch(
-        `https://api.airtable.com/v0/${baseId}/${regTable}`,
-        {
-          method:  "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
+  const filter = encodeURIComponent(`{${PROM_DEP_LNK}}='${depEl.value}'`);
+  const res    = await fetch(apiURL(TBL_PROM, `filterByFormula=${filter}`), { headers });
+  const { records } = await res.json();
+
+  records.forEach(rec => {
+    const opt = document.createElement("option");
+    opt.value       = rec.id;
+    opt.textContent = rec.fields[PROM_NOMBRE];
+    promEl.appendChild(opt);
+  });
+
+  // Opción para añadir nuevo
+  const optNuevo = document.createElement("option");
+  optNuevo.value = "__nuevo__";
+  optNuevo.textContent = "Agregar nuevo promotor…";
+  promEl.appendChild(optNuevo);
+});
+
+/******************************************************************
+ *  C) Mostrar input si eligen “Agregar nuevo…”
+ *****************************************************************/
+promEl.addEventListener("change", () => {
+  if (promEl.value === "__nuevo__") {
+    promNuevoInp.style.display = "block";
+    promNuevoInp.required = true;
+  } else {
+    promNuevoInp.style.display = "none";
+    promNuevoInp.required = false;
+  }
+});
+
+/******************************************************************
+ *  D) Submit con validaciones y guardado
+ *****************************************************************/
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msgBox.textContent = "";
+
+  /* 1. Leer valores */
+  const f        = new FormData(form);
+  const tel      = f.get("telefono").trim();
+  const nombre   = f.get("nombres").trim();
+  const ape1     = f.get("apellido1").trim();
+  const ape2     = f.get("apellido2").trim();
+  const depId    = depEl.value;
+  let   promId   = promEl.value;          // puede ser "__nuevo__"
+
+  /* 2. Validar duplicados en Registros */
+  const telFilter = encodeURIComponent(`{${F.telefono}}='${tel}'`);
+  const perFilter = encodeURIComponent(`AND({${F.nombres}}='${nombre}',{${F.apellido1}}='${ape1}',{${F.apellido2}}='${ape2}')`);
+  const dupTel = await fetch(apiURL(TBL_REG, `filterByFormula=${telFilter}`), { headers }).then(r=>r.json());
+  if (dupTel.records?.length) {
+    msgBox.textContent = "❌ Error: este número ya fue registrado.";
+    msgBox.style.color = "red"; return;
+  }
+  const dupPer = await fetch(apiURL(TBL_REG, `filterByFormula=${perFilter}`), { headers }).then(r=>r.json());
+  if (dupPer.records?.length) {
+    msgBox.textContent = "❌ Error: esta persona ya fue registrada.";
+    msgBox.style.color = "red"; return;
+  }
+
+  /* 3. Si es nuevo promotor, crearlo primero */
+  if (promId === "__nuevo__") {
+    const nuevoNombre = promNuevoInp.value.trim();
+    if (!nuevoNombre) {
+      msgBox.textContent = "❌ Escribe el nombre del nuevo promotor.";
+      msgBox.style.color = "red"; return;
+    }
+    const res = await fetch(apiURL(TBL_PROM), {
+      method : "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body   : JSON.stringify({
+        fields: {
+          [PROM_NOMBRE] : nuevoNombre,
+          [PROM_DEP_LNK]: [depId]          // linked‑record array
         }
-      );
-      const saveJson = await saveRes.json();
+      })
+    }).then(r=>r.json());
+    promId = res.id;
+  }
 
-      if (saveRes.ok) {
-        msg.textContent = "✅ Registro exitoso.";
-        msg.style.color = "green";
-        form.reset();
-        promoEl.innerHTML = `<option value="">Selecciona un promotor</option>`;
-      } else {
-        console.error("Airtable save error:", saveJson.error);
-        msg.textContent = "❌ Error al enviar el formulario.";
-        msg.style.color = "red";
-      }
-    } catch (err) {
-      console.error("Network save error:", err);
-      msg.textContent = "❌ Error de red al enviar el formulario.";
-      msg.style.color = "red";
-    }
+  /* 4. Guardar registro final en la tabla Registros */
+  const payload = {
+    fields: {
+      [REG_DEP_LNK] : [depId],           // dependencia (linked‑record)
+      [REG_PROM_LNK]: [promId],          // promotor   (linked‑record)
+      [F.nombres]   : nombre,
+      [F.apellido1] : ape1,
+      [F.apellido2] : ape2,
+      [F.calle]     : f.get("calle").trim(),
+      [F.numext]    : parseInt(f.get("numext"),10),
+      [F.numint]    : f.get("numint").trim(),
+      [F.colonia]   : f.get("colonia").trim(),
+      [F.cp]        : parseInt(f.get("cp"),10),
+      [F.seccion]   : parseInt(f.get("seccion"),10),
+      [F.telefono]  : tel
+    },
+    typecast: true
+  };
+
+  const save = await fetch(apiURL(TBL_REG), {
+    method : "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body   : JSON.stringify(payload)
   });
+  if (save.ok) {
+    msgBox.textContent = "✅ Registro exitoso.";
+    msgBox.style.color = "green";
+    form.reset();
+    promEl.innerHTML = `<option value="">Selecciona un promotor</option>`;
+  } else {
+    const err = await save.json();
+    console.error(err);
+    msgBox.textContent = "❌ Error al enviar el formulario.";
+    msgBox.style.color = "red";
+  }
 });
