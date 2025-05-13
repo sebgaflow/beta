@@ -5,77 +5,52 @@
   <title>Formulario Airtable</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <style>
-    html { margin:0; padding:0; height:100%; overflow:hidden; }
-    body {
-      font-family:'Inter',sans-serif;
-      background:#fff;
-      margin:0; padding:20px;
-      height:100%; overflow-y:auto; overflow-x:hidden;
+    html{margin:0;padding:0;height:100%;overflow:hidden;}
+    body{
+      font-family:'Inter',sans-serif;background:#fff;margin:0;
+      padding:20px;height:100%;overflow-y:auto;overflow-x:hidden;
       box-sizing:border-box;
     }
-    .container {
-      max-width:600px; margin:auto;
-      background:#fff; padding:30px;
-      border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      box-sizing:border-box;
-    }
-    select, input {
-      width:100%; padding:12px;
-      margin-bottom:15px; font-size:16px;
-      border:1px solid #ccc; border-radius:10px;
-      box-sizing:border-box;
-    }
-    button {
-      background:#8e8e93; color:#fff;
-      padding:14px; border:none; border-radius:12px;
-      font-size:16px; cursor:pointer; width:100%;
-      box-sizing:border-box;
-    }
-    #mensaje { margin-top:20px; font-weight:bold; text-align:center; }
+    .container{max-width:600px;margin:auto;background:#fff;
+      padding:30px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+    select,input{width:100%;padding:12px;margin-bottom:15px;font-size:16px;
+      border:1px solid #ccc;border-radius:10px;box-sizing:border-box;}
+    button{background:#8e8e93;color:#fff;padding:14px;border:none;border-radius:12px;
+      font-size:16px;cursor:pointer;width:100%;}
+    #mensaje{margin-top:20px;font-weight:bold;text-align:center;}
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Formulario de Registro</h2>
     <form id="formulario">
-      <!-- Lista estática de dependencias -->
+      <!-- Dependencia: se carga dinámicamente -->
       <select id="dependencia" name="dependencia" required>
         <option value="">Selecciona una dependencia</option>
-        <option>JEFATURA DE LA OFICINA DE LA GUBERNATURA</option>
-        <option>SECRETARÍA DE CULTURA</option>
-        <option>SECRETARÍA DE LA CONTRALORÍA</option>
-        <option>SECRETARÍA DE EDUCACIÓN</option>
-        <option>SECRETARÍA DE HACIENDA</option>
-        <option>SECRETARÍA DE LAS MUJERES</option>
-        <option>SECRETARÍA DE SEGURIDAD PÚBLICA Y SEGURIDAD CIUDADANA</option>
-        <option>SECRETARÍA DE DESARROLLO AGROPECUARIO</option>
-        <option>SECRETARÍA DE ADMINISTRACIÓN</option>
-        <option>SECRETARÍA DE INFRAESTRUCTURA</option>
-        <option>SECRETARÍA DE SALUD</option>
-        <option>SECRETARÍA DE DESARROLLO SUSTENTABLE</option>
-        <option>SECRETARÍA DE DESARROLLO ECONÓMICO</option>
-        <option>SECRETARÍA DE GOBIERNO</option>
-        <option>SECRETARÍA DE BIENESTAR</option>
-        <option>CONSEJERÍA JURÍDICA</option>
-        <option>SECRETARÍA DE TURISMO</option>
       </select>
 
-      <!-- Se llenará dinámicamente vía JS -->
+      <!-- Promotor: se carga según la dependencia -->
       <select id="promotor" name="promotor" required>
         <option value="">Selecciona un promotor</option>
       </select>
 
-      <!-- Resto de campos -->
-      <input name="nombres" placeholder="Nombre(s)" required>
-      <input name="apellido1" placeholder="Primer Apellido" required>
-      <input name="apellido2" placeholder="Segundo Apellido" required>
-      <input name="calle" placeholder="Calle" required>
+      <!-- Para crear nuevo promotor -->
+      <input type="text" id="promotor_nuevo"
+             placeholder="Nombre completo del promotor"
+             style="display:none;">
+
+      <!-- Resto de campos personales -->
+      <input name="nombres"    placeholder="Nombre(s)"            required>
+      <input name="apellido1"  placeholder="Primer Apellido"      required>
+      <input name="apellido2"  placeholder="Segundo Apellido"     required>
+      <input name="calle"      placeholder="Calle"                required>
       <input name="numext" type="number" placeholder="Número exterior" required>
-      <input name="numint" placeholder="Número interior">
-      <input name="colonia" placeholder="Colonia" required>
-      <input name="cp" type="number" placeholder="Código postal" required>
+      <input name="numint"     placeholder="Número interior">
+      <input name="colonia"    placeholder="Colonia"              required>
+      <input name="cp" type="number"  placeholder="Código postal" required>
       <input name="seccion" type="number" placeholder="Clave de sección" required>
-      <input name="telefono" placeholder="Teléfono a 10 dígitos" required>
+      <input name="telefono"   placeholder="Teléfono a 10 dígitos" required>
+
       <button type="submit">Enviar</button>
     </form>
     <div id="mensaje"></div>
