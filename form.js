@@ -1,7 +1,7 @@
 /******************************************************************
  * Configuración de Airtable
  *****************************************************************/
-const API_KEY      = "TU_API_KEY_AIRTABLE"; // ← pon aquí tu PAT
+const API_KEY      = "patpwEeJi6lj1kVSA.96038881b98860c419b2dd70e45e3e70d5e7336b9124a86b7d0caf5a270173fc"; // ← pon aquí tu PAT
 const BASE_ID      = "appi5iq2xznnBxNvJ";
 
 /* Tablas */
